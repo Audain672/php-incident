@@ -1,20 +1,19 @@
 /**
- * Authentication Hook
- * Provides authentication methods and state management
- * @module useAuth
+ * Dynamic Authentication Hook
+ * Automatically switches between localStorage and real API based on configuration
+ * @module useDynamicAuth
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { login as loginApi, logout as logoutApi, register as registerApi } from '../api/localAuthApi.js';
+import { getAuthApi, isLocalMode, debugLog } from '../config/apiConfig.js';
 import { authStorage } from '../utils/localStorage.js';
-import { validateToken } from '../utils/helpers.js';
 import { useAuth as useAuthContext } from '../context/AuthContext.jsx';
 
 /**
- * Custom hook for authentication operations
+ * Custom hook for authentication operations with dynamic API switching
  * @returns {object} Authentication methods and state
  */
-export const useAuth = () => {
+export const useDynamicAuth = () => {
   const queryClient = useQueryClient();
   const authContext = useAuthContext();
 
@@ -22,9 +21,15 @@ export const useAuth = () => {
    * Login mutation
    */
   const loginMutation = useMutation({
-    mutationFn: loginApi,
+    mutationFn: async (credentials) => {
+      const authApi = await getAuthApi();
+      debugLog('Login attempt', { email: credentials.email, mode: isLocalMode() ? 'local' : 'api' });
+      return authApi.login(credentials);
+    },
     onSuccess: (data) => {
-      // Store auth data in localStorage
+      debugLog('Login success', data);
+      
+      // Store auth data
       if (data.token) {
         authStorage.setToken(data.token);
       }
@@ -39,8 +44,8 @@ export const useAuth = () => {
       queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
     onError: (error) => {
+      debugLog('Login failed', error);
       console.error('Login failed:', error);
-      // Tokens are automatically cleared by apiClient on 401
     },
   });
 
@@ -48,8 +53,14 @@ export const useAuth = () => {
    * Register mutation
    */
   const registerMutation = useMutation({
-    mutationFn: registerApi,
+    mutationFn: async (userData) => {
+      const authApi = await getAuthApi();
+      debugLog('Register attempt', { email: userData.email, mode: isLocalMode() ? 'local' : 'api' });
+      return authApi.register(userData);
+    },
     onSuccess: (data) => {
+      debugLog('Register success', data);
+      
       // Store auth data if registration returns them
       if (data.token) {
         authStorage.setToken(data.token);
@@ -65,6 +76,7 @@ export const useAuth = () => {
       queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
     onError: (error) => {
+      debugLog('Register failed', error);
       console.error('Registration failed:', error);
     },
   });
@@ -73,18 +85,31 @@ export const useAuth = () => {
    * Logout mutation
    */
   const logoutMutation = useMutation({
-    mutationFn: logoutApi,
+    mutationFn: async () => {
+      const authApi = await getAuthApi();
+      debugLog('Logout attempt', { mode: isLocalMode() ? 'local' : 'api' });
+      
+      try {
+        return await authApi.logout();
+      } catch (error) {
+        // Continue with local logout even if API fails
+        debugLog('Logout API failed, continuing with local logout', error);
+        return { success: true };
+      }
+    },
     onMutate: async () => {
       // Cancel any ongoing auth queries
       await queryClient.cancelQueries({ queryKey: ['auth'] });
     },
     onSuccess: () => {
+      debugLog('Logout success');
       // Clear auth data and state
       authStorage.clearAuth();
       authContext.logout();
       queryClient.clear();
     },
     onError: (error) => {
+      debugLog('Logout error', error);
       // Even if logout API fails, clear local state
       authStorage.clearAuth();
       authContext.logout();
@@ -96,8 +121,6 @@ export const useAuth = () => {
   /**
    * Perform login
    * @param {object} credentials - Login credentials
-   * @param {string} credentials.email - User email
-   * @param {string} credentials.password - User password
    * @returns {Promise} Login mutation promise
    */
   const login = (credentials) => {
@@ -107,10 +130,6 @@ export const useAuth = () => {
   /**
    * Perform registration
    * @param {object} userData - User registration data
-   * @param {string} userData.firstName - First name
-   * @param {string} userData.lastName - Last name
-   * @param {string} userData.email - Email
-   * @param {string} userData.password - Password
    * @returns {Promise} Register mutation promise
    */
   const register = (userData) => {
@@ -119,17 +138,17 @@ export const useAuth = () => {
 
   /**
    * Perform logout
-   * @param {string} [refreshToken] - Optional refresh token
    * @returns {Promise} Logout mutation promise
    */
-  const logout = (refreshToken = null) => {
-    return logoutMutation.mutateAsync(refreshToken);
+  const logout = () => {
+    return logoutMutation.mutateAsync();
   };
 
   /**
    * Manual logout without API call
    */
   const logoutLocal = () => {
+    debugLog('Manual local logout');
     authStorage.clearAuth();
     authContext.logout();
     queryClient.clear();
@@ -160,6 +179,9 @@ export const useAuth = () => {
     isLoggingIn: loginMutation.isPending,
     isRegistering: registerMutation.isPending,
     isLoggingOut: logoutMutation.isPending,
+
+    // Configuration info
+    isLocalMode: isLocalMode(),
   };
 };
 
@@ -167,8 +189,8 @@ export const useAuth = () => {
  * Hook for login form handling
  * @returns {object} Login form methods and state
  */
-export const useLoginForm = () => {
-  const { login, isLoggingIn } = useAuth();
+export const useDynamicLoginForm = () => {
+  const { login, isLoggingIn, isLocalMode } = useDynamicAuth();
 
   /**
    * Handle login form submission
@@ -182,7 +204,8 @@ export const useLoginForm = () => {
     } catch (error) {
       return { 
         success: false, 
-        error: error.message || 'Échec de la connexion' 
+        error: error.message || 'Échec de la connexion',
+        isLocalMode 
       };
     }
   };
@@ -190,6 +213,7 @@ export const useLoginForm = () => {
   return {
     handleLogin,
     isLoggingIn,
+    isLocalMode,
   };
 };
 
@@ -197,8 +221,8 @@ export const useLoginForm = () => {
  * Hook for registration form handling
  * @returns {object} Registration form methods and state
  */
-export const useRegisterForm = () => {
-  const { register, isRegistering } = useAuth();
+export const useDynamicRegisterForm = () => {
+  const { register, isRegistering, isLocalMode } = useDynamicAuth();
 
   /**
    * Handle registration form submission
@@ -212,7 +236,8 @@ export const useRegisterForm = () => {
     } catch (error) {
       return { 
         success: false, 
-        error: error.message || 'Échec de l\'inscription' 
+        error: error.message || 'Échec de l\'inscription',
+        isLocalMode 
       };
     }
   };
@@ -220,7 +245,8 @@ export const useRegisterForm = () => {
   return {
     handleRegister,
     isRegistering,
+    isLocalMode,
   };
 };
 
-export default useAuth;
+export default useDynamicAuth;

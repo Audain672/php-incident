@@ -7,7 +7,9 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
+import ErrorBoundary from './components/common/ErrorBoundary.jsx';
+import ApiModeIndicator from './components/common/ApiModeIndicator.jsx';
+import DebugPanel from './components/common/DebugPanel.jsx';
 import AppRouter from './routes/AppRouter.jsx';
 
 /**
@@ -135,13 +137,17 @@ const App = () => {
         <div className="App">
           <AppRouter />
           
-          {/* React Query DevTools - only in development */}
+          {/* Development Tools - only in development */}
           {process.env.NODE_ENV === 'development' && (
-            <ReactQueryDevtools
-              initialIsOpen={false}
-              position="bottom-right"
-              buttonPosition="bottom-right"
-            />
+            <>
+              <ApiModeIndicator />
+              <DebugPanel />
+              <ReactQueryDevtools
+                initialIsOpen={false}
+                position="bottom-right"
+                buttonPosition="bottom-right"
+              />
+            </>
           )}
         </div>
       </QueryClientProvider>

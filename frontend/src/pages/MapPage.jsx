@@ -6,8 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.js';
-import { useCreateIncident, useIncidentDeletion } from '../hooks/useIncidents.js';
+import { useAuth, useCreateIncident, useDeleteIncident, useIncidents } from '../hooks/index.js';
 import useMapStore from '../store/useMapStore.js';
 import MapContainer from '../components/map/MapContainer.jsx';
 import IncidentMarker from '../components/map/IncidentMarker.jsx';
@@ -24,8 +23,9 @@ import { INCIDENT_TYPES } from '../utils/constants.js';
 const MapPage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { deleteIncident } = useIncidentDeletion();
+  const { deleteIncident } = useDeleteIncident();
   const { isCreating: isCreatingIncident } = useCreateIncident();
+  const { data: incidentsData, isLoading: incidentsLoading, error: incidentsError } = useIncidents();
   
   // Store state
   const {
@@ -43,6 +43,9 @@ const MapPage = () => {
   // Local state
   const [showList, setShowList] = useState(true);
   const [mapInstance, setMapInstance] = useState(null);
+
+  console.log('🗺️ MapPage - incidentsData:', incidentsData);
+  console.log('🗺️ MapPage - incidentsLoading:', incidentsLoading);
 
   /**
    * Handle logout
@@ -285,8 +288,27 @@ const MapPage = () => {
               className="leaflet-top-left mt-16 ml-4"
             />
 
-            {/* Incident markers would go here */}
-            {/* This would be populated with actual incident data */}
+            {/* Incident markers */}
+            {incidentsLoading && (
+              <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-white px-3 py-2 rounded-lg shadow-lg">
+                Chargement des incidents...
+              </div>
+            )}
+            
+            {incidentsError && (
+              <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-700 px-3 py-2 rounded-lg shadow-lg">
+                Erreur: {incidentsError.message || 'Impossible de charger les incidents'}
+              </div>
+            )}
+            
+            {!incidentsLoading && !incidentsError && incidentsData?.incidents?.map((incident) => (
+              <IncidentMarker
+                key={incident.id}
+                incident={incident}
+                onSelect={handleIncidentSelect}
+                isSelected={selectedIncident?.id === incident.id}
+              />
+            ))}
           </MapContainer>
 
           {/* Mobile toggle button */}

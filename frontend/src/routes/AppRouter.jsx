@@ -7,7 +7,7 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext.jsx';
-import { ErrorBoundary } from '../components/common/ErrorBoundary.jsx';
+import ErrorBoundary from '../components/common/ErrorBoundary.jsx';
 import { FullPageSpinner } from '../components/common/Spinner.jsx';
 import PrivateRoute from '../components/common/PrivateRoute.jsx';
 

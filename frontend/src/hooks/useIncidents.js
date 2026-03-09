@@ -5,7 +5,7 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchIncidents, fetchIncidentById } from '../api/incidentApi.js';
+import { fetchIncidents, fetchIncidentById } from '../api/localIncidentApi.js';
 import useMapStore from '../store/useMapStore.js';
 
 /**
@@ -122,7 +122,7 @@ export const useIncidentStats = (params = {}, options = {}) => {
     queryKey: ['incidents', 'stats', params],
     queryFn: () => {
       // Import here to avoid circular dependencies
-      return import('../api/incidentApi.js').then(({ getIncidentStats }) => 
+      return import('../api/localIncidentApi.js').then(({ getIncidentStats }) => 
         getIncidentStats(params)
       );
     },
@@ -150,7 +150,7 @@ export const useSearchIncidents = (query, params = {}, options = {}) => {
     queryKey: ['incidents', 'search', query, params],
     queryFn: () => {
       // Import here to avoid circular dependencies
-      return import('../api/incidentApi.js').then(({ searchIncidents }) => 
+      return import('../api/localIncidentApi.js').then(({ searchIncidents }) => 
         searchIncidents(query, params)
       );
     },
@@ -181,7 +181,7 @@ export const useNearbyIncidents = (latitude, longitude, radius = 5, filters = {}
     queryKey: ['incidents', 'nearby', { latitude, longitude, radius, ...filters }],
     queryFn: () => {
       // Import here to avoid circular dependencies
-      return import('../api/incidentApi.js').then(({ getNearbyIncidents }) => 
+      return import('../api/localIncidentApi.js').then(({ getNearbyIncidents }) => 
         getNearbyIncidents(latitude, longitude, radius, filters)
       );
     },
@@ -209,7 +209,7 @@ export const useUserIncidents = (userId, params = {}, options = {}) => {
     queryKey: ['incidents', 'user', userId, params],
     queryFn: () => {
       // Import here to avoid circular dependencies
-      return import('../api/incidentApi.js').then(({ getUserIncidents }) => 
+      return import('../api/localIncidentApi.js').then(({ getUserIncidents }) => 
         getUserIncidents(userId, params)
       );
     },

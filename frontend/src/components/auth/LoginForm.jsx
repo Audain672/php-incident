@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import PropTypes from 'prop-types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../../utils/validators.js';
 import Input from '../common/Input.jsx';

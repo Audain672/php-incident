@@ -5,7 +5,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteIncident } from '../api/incidentApi.js';
+import { deleteIncident } from '../api/localIncidentApi.js';
 import { useInvalidateIncidents } from './useIncidents.js';
 import useMapStore from '../store/useMapStore.js';
 

@@ -6,7 +6,7 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuth } from '../hooks/index.js';
 import LoginForm from '../components/auth/LoginForm.jsx';
 import { FullPageSpinner } from '../components/common/Spinner.jsx';
 

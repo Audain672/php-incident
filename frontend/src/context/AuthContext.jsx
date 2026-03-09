@@ -6,8 +6,9 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getCurrentUser } from '../api/authApi.js';
-import { isAuthenticated, clearTokens, getUserFromToken } from '../utils/tokenStorage.js';
+import { getCurrentUser } from '../api/localAuthApi.js';
+import { authStorage } from '../utils/localStorage.js';
+import { validateToken } from '../utils/helpers.js';
 
 /**
  * Authentication context
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   } = useQuery({
     queryKey: ['auth', 'user'],
     queryFn: getCurrentUser,
-    enabled: isAuthenticated(),
+    enabled: authStorage.isAuthenticated(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error) => {
       // Don't retry on 401/403 errors
@@ -47,11 +48,11 @@ export const AuthProvider = ({ children }) => {
   // Initialize auth state
   useEffect(() => {
     const initializeAuth = () => {
-      // Check if we have a valid token in memory
-      if (isAuthenticated()) {
-        // Try to get user data from token first (faster)
-        const tokenUser = getUserFromToken();
-        if (tokenUser) {
+      // Check if we have a valid token in localStorage
+      if (authStorage.isAuthenticated()) {
+        // Try to get user data from localStorage first (faster)
+        const storedUser = authStorage.getUser();
+        if (storedUser) {
           // We'll still fetch fresh data from server, but this gives us immediate state
         }
       }
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }) => {
   // Handle logout event
   useEffect(() => {
     const handleLogout = () => {
-      clearTokens();
+      authStorage.clearAuth();
       queryClient.clear(); // Clear all query cache
       queryClient.invalidateQueries({ queryKey: ['auth'] });
     };
@@ -78,7 +79,7 @@ export const AuthProvider = ({ children }) => {
     if (error) {
       // If we get a 401/403, clear tokens and trigger logout
       if (error.response?.status === 401 || error.response?.status === 403) {
-        clearTokens();
+        authStorage.clearAuth();
         queryClient.clear();
         window.dispatchEvent(new CustomEvent('auth:logout'));
       }
@@ -88,12 +89,11 @@ export const AuthProvider = ({ children }) => {
   /**
    * Login function - should be called after successful API login
    * @param {object} userData - User data from login response
-   * @param {string} userData.accessToken - JWT access token
-   * @param {string} userData.refreshToken - JWT refresh token
+   * @param {string} userData.token - JWT token
    * @param {object} userData.user - User information
    */
   const login = (userData) => {
-    // Tokens are already set by the login API call
+    // Auth data is already set by the login API call
     // Just invalidate and refetch user data
     queryClient.invalidateQueries({ queryKey: ['auth'] });
     refetchUser();
@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }) => {
    * Logout function
    */
   const logout = () => {
-    clearTokens();
+    authStorage.clearAuth();
     queryClient.clear();
     window.dispatchEvent(new CustomEvent('auth:logout'));
   };
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }) => {
    * @returns {boolean} Authentication status
    */
   const checkAuth = () => {
-    return isAuthenticated();
+    return authStorage.isAuthenticated();
   };
 
   /**
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }) => {
    * @returns {string|null} User role or null
    */
   const getUserRole = () => {
-    return user?.role || getUserFromToken()?.role || null;
+    return user?.role || authStorage.getUser()?.role || null;
   };
 
   /**
@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }) => {
     // State
     user: user || null,
     isLoading: isLoading || !isInitialized,
-    isAuthenticated: isAuthenticated(),
+    isAuthenticated: authStorage.isAuthenticated(),
     error,
 
     // Methods
