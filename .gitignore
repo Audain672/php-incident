@@ -24,3 +24,9 @@ frontend/*.local
 *.njsproj
 *.sln
 *.sw?
+node_modules
+dist
+dist-ssr
+*.local
+.env.local
+
