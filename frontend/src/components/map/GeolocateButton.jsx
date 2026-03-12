@@ -1,9 +1,32 @@
+// AUDIT ÉTAPE 1
+// ──────────────────────────────────────────────────────────────────
+// CE QUE FAIT CE FICHIER (état actuel) :
+//   - Composant DUMB qui affiche un bouton de géolocalisation sur la carte
+//   - Géolocalise l'utilisateur via useGeolocationWithMap (hook existant)
+//   - Affiche un cercle de précision optionnel sur la carte
+//   - Centre la carte sur la position trouvée (map.setView)
+//   - GeolocateControl : version intégrée dans le système de contrôles
+//     Leaflet (L.Control) — actuellement incomplète (L non importé ici)
+//
+// CE QUI DOIT CHANGER AUX ÉTAPES SUIVANTES :
+//   - Appeler setIsLocating(true/false) depuis le store pour synchro visuelle
+//     de l'état de chargement dans toute l'interface (pas seulement le bouton)
+//   - Appeler setUserLocation(location) dans le store pour persistence
+//     de la position trouvée
+//   - Corriger GeolocateControl : L n'est pas importé dans ce fichier
+//
+// DÉPENDANCES :
+//   - useGeolocationWithMap (hook) — gère l'API Geolocation du navigateur
+//   - useMap (react-leaflet) — accès à l'instance Leaflet courante
+//   - Button (composant common) — composant bouton réutilisable
+//   - useMapStore (prochainement) : setIsLocating, setUserLocation
+// ──────────────────────────────────────────────────────────────────
+
 /**
  * Geolocate Button Component
  * DUMB component for user geolocation with visual feedback
  * @component
  */
-
 import React from 'react';
 import { useMap } from 'react-leaflet';
 import { useGeolocationWithMap } from '../../hooks/useGeolocation.js';

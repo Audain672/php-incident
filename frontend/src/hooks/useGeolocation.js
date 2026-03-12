@@ -77,6 +77,7 @@ export const useGeolocation = (options = {}) => {
     setUserLocation({
       lat: newPosition.latitude,
       lng: newPosition.longitude,
+      accuracy: newPosition.accuracy,
     });
 
     return newPosition;

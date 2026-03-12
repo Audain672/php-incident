@@ -1,3 +1,24 @@
+// AUDIT ÉTAPE 1
+// ──────────────────────────────────────────────────────────────────
+// CE QUE FAIT CE FICHIER (état actuel) :
+//   - Définit les constantes globales de l'application :
+//     API_ENDPOINTS, INCIDENT_TYPES, SEVERITY_LEVELS, LIMITS,
+//     FILE_CONSTRAINTS, DEFAULT_COORDINATES, INCIDENT_STATUS,
+//     PAGINATION, STORAGE_KEYS
+//   - INCIDENT_TYPES : chaque type a id, label, color, icon (émoji)
+//   - SEVERITY_LEVELS : chaque niveau a id, label, color
+//   - DEFAULT_COORDINATES : Paris (lat 48.8566, lng 2.3522, zoom 13)
+//
+// CE QUI DOIT CHANGER AUX ÉTAPES SUIVANTES :
+//   - Aucun changement urgent sur ce fichier
+//   - Optionnel : ajouter MAP_INTERACTION_CONFIG (durée d'animation flyTo,
+//     zoom cible lors de la sélection d'un marqueur, etc.)
+//
+// DÉPENDANCES :
+//   - Utilisé par useMapStore.js, MapContainer.jsx, IncidentMarker.jsx,
+//     MapPage.jsx, et de nombreux autres composants
+// ──────────────────────────────────────────────────────────────────
+
 /**
  * Constants for the Incident Reporter application
  * @module constants

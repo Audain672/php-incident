@@ -23,6 +23,7 @@ const AuthContext = createContext(null);
  */
 export const AuthProvider = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(authStorage.isAuthenticated());
   const queryClient = useQueryClient();
 
   // Query to get current user data
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   } = useQuery({
     queryKey: ['auth', 'user'],
     queryFn: getCurrentUser,
-    enabled: authStorage.isAuthenticated(),
+    enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error) => {
       // Don't retry on 401/403 errors
@@ -66,6 +67,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const handleLogout = () => {
       authStorage.clearAuth();
+      setIsAuthenticated(false);
       queryClient.clear(); // Clear all query cache
       queryClient.invalidateQueries({ queryKey: ['auth'] });
     };
@@ -94,7 +96,8 @@ export const AuthProvider = ({ children }) => {
    */
   const login = (userData) => {
     // Auth data is already set by the login API call
-    // Just invalidate and refetch user data
+    setIsAuthenticated(true);
+    // Invalidate and refetch user data
     queryClient.invalidateQueries({ queryKey: ['auth'] });
     refetchUser();
   };
@@ -104,6 +107,7 @@ export const AuthProvider = ({ children }) => {
    */
   const logout = () => {
     authStorage.clearAuth();
+    setIsAuthenticated(false);
     queryClient.clear();
     window.dispatchEvent(new CustomEvent('auth:logout'));
   };
@@ -161,7 +165,7 @@ export const AuthProvider = ({ children }) => {
     // State
     user: user || null,
     isLoading: isLoading || !isInitialized,
-    isAuthenticated: authStorage.isAuthenticated(),
+    isAuthenticated,
     error,
 
     // Methods

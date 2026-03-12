@@ -1,3 +1,26 @@
+// AUDIT ÉTAPE 1
+// ──────────────────────────────────────────────────────────────────
+// CE QUE FAIT CE FICHIER (état actuel) :
+//   - Composant SMART qui initialise la carte Leaflet (LeafletMapContainer)
+//   - Corrige le bug d'icônes par défaut de Leaflet (fixLeafletIcons)
+//   - MapController : synchronise le store Zustand (mapCenter, mapZoom, mapBounds)
+//     avec les événements Leaflet (moveend)
+//   - Passe un callback onMapReady au parent (MapPage) pour exposer l'instance map
+//
+// CE QUI DOIT CHANGER AUX ÉTAPES SUIVANTES :
+//   - MapController doit appeler setMapRef(map) pour stocker la référence Leaflet
+//     dans le store (actuellement le store n'a pas ce champ)
+//   - Ajouter l'écoute d'un clic vide sur la carte pour fermer le panneau de détail
+//     (clearSelection depuis le store)
+//   - Ajouter l'overlay de chargement natif (isMapLoading depuis le store)
+//   - Intégrer le cluster de marqueurs (MarkerClusterGroup de leaflet.markercluster)
+//
+// DÉPENDANCES :
+//   - useMapStore (store Zustand) — lit mapCenter, mapZoom ; écrit setMapCenter,
+//     setMapZoom, setMapBounds (+ setMapRef à ajouter)
+//   - react-leaflet : MapContainer, TileLayer, useMap
+// ──────────────────────────────────────────────────────────────────
+
 /**
  * Map Container Component
  * SMART component initializing Leaflet map with proper icon configuration
@@ -5,11 +28,18 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer as LeafletMapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer as LeafletMapContainer, TileLayer, useMap, Marker, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import './markers.css';
+import MapLoadingOverlay from './MapLoadingOverlay.jsx';
+import MapControls from './MapControls.jsx';
+import MapEmptyState from './MapEmptyState.jsx';
+import GeolocateButton from './GeolocateButton.jsx';
 import useMapStore from '../../store/useMapStore.js';
 import { DEFAULT_COORDINATES } from '../../utils/constants.js';
+import MapClickHandler from './MapClickHandler.jsx';
+import DraftIncidentMarker from './DraftIncidentMarker.jsx';
 
 /**
  * Fix for default Leaflet icon issue
@@ -29,6 +59,20 @@ const fixLeafletIcons = () => {
   });
 };
 
+/**
+ * Custom icon for user location (blue dot)
+ */
+const createUserLocationIcon = () => {
+  return L.divIcon({
+    className: 'user-location-marker',
+    html: '<div class="user-location-dot"></div><div class="user-location-pulse"></div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+};
+
+const userIcon = createUserLocationIcon();
+
 // Call the fix immediately
 fixLeafletIcons();
 
@@ -46,6 +90,7 @@ const MapController = ({ onMapReady }) => {
     setMapCenter,
     setMapZoom,
     setMapBounds,
+    setMapRef,
   } = useMapStore();
 
   const mapRef = useRef(map);
@@ -62,11 +107,14 @@ const MapController = ({ onMapReady }) => {
       map.setView([mapCenter.lat, mapCenter.lng], mapZoom);
       isInitialized.current = true;
       
+      // Stocker la référence de la carte dans le store
+      setMapRef(map);
+
       if (onMapReady) {
         onMapReady(map);
       }
     }
-  }, [map, mapCenter, mapZoom, onMapReady]);
+  }, [map, mapCenter, mapZoom, onMapReady, setMapRef]);
 
   // Update store when map moves
   useEffect(() => {
@@ -146,12 +194,35 @@ const MapContainer = ({
   const {
     mapCenter,
     mapZoom,
+    isFormOpen,
+    draftLocation,
+    setDraftLocation,
+    userLocation,
   } = useMapStore();
 
   // Ensure we're on client side before rendering Leaflet
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Fermer le panneau de détail avec la touche Escape
+  const { clearSelection, isDetailPanelOpen } = useMapStore();
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isDetailPanelOpen) {
+        clearSelection();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isDetailPanelOpen, clearSelection]);
+
+  // Vérification si aucun incident (pour MapEmptyState)
+  const childrenArray = React.Children.toArray(children);
+  const hasNoMarkers = childrenArray.length === 0 || 
+    (childrenArray.length === 1 && childrenArray[0]?.props?.incidents?.length === 0);
+  const { selectedType } = useMapStore();
+  const showEmptyState = hasNoMarkers && !!selectedType;
 
   // Don't render on server side
   if (!isClient) {
@@ -166,12 +237,12 @@ const MapContainer = ({
   }
 
   return (
-    <div className={className} style={style}>
+    <div className={className} style={{ ...style, cursor: isFormOpen ? 'crosshair' : 'default' }}>
       <LeafletMapContainer
         center={[mapCenter.lat, mapCenter.lng]}
         zoom={mapZoom}
         style={{ height: '100%', width: '100%' }}
-        zoomControl={true}
+        zoomControl={false}
         attributionControl={true}
       >
         {/* Tile layer */}
@@ -182,6 +253,50 @@ const MapContainer = ({
 
         {/* Map controller for store synchronization */}
         <MapController onMapReady={onMapReady} />
+
+        {/* Clic sur la carte pour définir les coordonnées d'un nouveau signalement (Étape 7) */}
+        <MapClickHandler 
+          isActive={isFormOpen} 
+          onCoordinatesSelected={setDraftLocation} 
+        />
+        
+        {/* Marqueur brouillon pour le futur incident */}
+        {isFormOpen && draftLocation && (
+          <DraftIncidentMarker
+            position={draftLocation}
+            onPositionChange={setDraftLocation}
+          />
+        )}
+
+        {/* Map controls (Zoom, Location, Fit) */}
+        <MapControls />
+
+        {/* Empty state overlay */}
+        {showEmptyState && <MapEmptyState />}
+
+        {/* User Location Marker & Accuracy Circle */}
+        {userLocation && (
+          <>
+            <Marker 
+              position={[userLocation.lat, userLocation.lng]} 
+              icon={userIcon}
+              zIndexOffset={1000}
+            />
+            {userLocation.accuracy && (
+              <Circle
+                center={[userLocation.lat, userLocation.lng]}
+                radius={userLocation.accuracy}
+                pathOptions={{
+                  fillColor: '#3b82f6',
+                  fillOpacity: 0.15,
+                  color: '#3b82f6',
+                  weight: 1,
+                  dashArray: '5, 5'
+                }}
+              />
+            )}
+          </>
+        )}
 
         {/* Child components (markers, etc.) */}
         {children}

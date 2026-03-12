@@ -22,6 +22,8 @@ export {
   useDynamicInvalidateIncidents as useInvalidateIncidents,
 } from './useDynamicIncidents.js';
 
+export { useIncidentForm } from './useCreateIncident.js';
+
 // Original hooks (for backward compatibility)
 export { useAuth as useOriginalAuth } from './useAuth.js';
 export { useLoginForm as useOriginalLoginForm } from './useAuth.js';
@@ -34,6 +36,8 @@ export { useInvalidateIncidents as useOriginalInvalidateIncidents } from './useI
 
 // Other hooks
 export { default as useGeolocation } from './useGeolocation.js';
+export { default as useIncidentDetail } from './useIncidentDetail.js';
+export { default as useFlyToIncident } from './useFlyToIncident.js';
 
 /**
  * Hook to get current API mode and configuration

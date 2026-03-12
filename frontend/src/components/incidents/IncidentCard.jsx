@@ -11,19 +11,28 @@ import { INCIDENT_TYPES, SEVERITY_LEVELS, INCIDENT_STATUS } from '../../utils/co
 /**
  * Incident card component
  * @param {object} props - Component props
- * @param {object} props.incident - Incident data
- * @param {function} [props.onViewDetails] - Callback for viewing details
+ * @param {boolean} [props.isSelected] - Whether card is selected
+ * @param {function} props.onClick - Callback for viewing details
+ * @param {function} [props.onMouseEnter] - Callback for hover enter
+ * @param {function} [props.onMouseLeave] - Callback for hover leave
  * @param {function} [props.onEdit] - Callback for editing
  * @param {function} [props.onDelete] - Callback for deleting
+ * @param {boolean} [props.isAdmin] - Whether user is admin
  * @param {boolean} [props.compact=false] - Whether to show compact version
  * @param {string} [props.className=''] - Additional CSS classes
+ * @param {object} [props.cardRef] - Ref for scrolling
  * @returns {JSX.Element} Incident card
  */
 const IncidentCard = ({
   incident,
-  onViewDetails,
+  isSelected,
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
   onEdit,
   onDelete,
+  isAdmin,
+  cardRef,
   compact = false,
   className = '',
 }) => {
@@ -58,11 +67,16 @@ const IncidentCard = ({
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
 
+  const cardClasses = `cursor-pointer rounded-xl p-3 mb-2 border-2 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isSelected ? 'border-primary-500 bg-primary-50 shadow-md' : 'border-transparent bg-white hover:border-neutral-200'} ${className}`;
+
   if (compact) {
     return (
       <div 
-        className={`bg-white border border-neutral-200 rounded-lg p-3 hover:shadow-md transition-shadow duration-200 cursor-pointer ${className}`}
-        onClick={() => onViewDetails?.(incident)}
+        ref={cardRef}
+        className={cardClasses}
+        onClick={() => onClick?.(incident)}
+        onMouseEnter={() => onMouseEnter?.(incident)}
+        onMouseLeave={() => onMouseLeave?.(incident)}
       >
         <div className="flex items-start space-x-3">
           {/* Icon */}
@@ -101,7 +115,13 @@ const IncidentCard = ({
   }
 
   return (
-    <div className={`bg-white border border-neutral-200 rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 ${className}`}>
+    <div 
+      ref={cardRef}
+      className={`${cardClasses} p-1`} // Extra padding to simulate difference from compact wrapper
+      onClick={() => onClick?.(incident)}
+      onMouseEnter={() => onMouseEnter?.(incident)}
+      onMouseLeave={() => onMouseLeave?.(incident)}
+    >
       {/* Header */}
       <div className="p-4 border-b border-neutral-200">
         <div className="flex items-start justify-between">
@@ -207,9 +227,12 @@ const IncidentCard = ({
 
         {/* Actions */}
         <div className="flex space-x-2">
-          {onViewDetails && (
+          {onClick && (
             <button
-              onClick={() => onViewDetails(incident)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick(incident);
+              }}
               className="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors duration-200"
             >
               Voir les détails
@@ -218,16 +241,22 @@ const IncidentCard = ({
           
           {onEdit && (
             <button
-              onClick={() => onEdit(incident)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(incident);
+              }}
               className="px-4 py-2 bg-neutral-100 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-200 transition-colors duration-200"
             >
               Modifier
             </button>
           )}
           
-          {onDelete && (
+          {(onDelete && isAdmin) && (
             <button
-              onClick={() => onDelete(incident)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(incident);
+              }}
               className="px-4 py-2 bg-danger-100 text-danger-700 text-sm font-medium rounded-lg hover:bg-danger-200 transition-colors duration-200"
             >
               Supprimer
@@ -257,9 +286,17 @@ IncidentCard.propTypes = {
       lastName: PropTypes.string,
     }),
   }).isRequired,
-  onViewDetails: PropTypes.func,
+  isSelected: PropTypes.bool,
+  onClick: PropTypes.func.isRequired,
+  onMouseEnter: PropTypes.func,
+  onMouseLeave: PropTypes.func,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
+  isAdmin: PropTypes.bool,
+  cardRef: PropTypes.oneOfType([
+    PropTypes.func, 
+    PropTypes.shape({ current: PropTypes.instanceOf(Element) })
+  ]),
   compact: PropTypes.bool,
   className: PropTypes.string,
 };

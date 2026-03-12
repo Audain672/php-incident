@@ -4,9 +4,11 @@
  * @component
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import L from 'leaflet';
 import { useIncidents, useInvalidateIncidents } from '../../hooks/useIncidents.js';
+import { useFlyToIncident } from '../../hooks/index.js';
 import useMapStore from '../../store/useMapStore.js';
 import IncidentCard from './IncidentCard.jsx';
 import IncidentFilter from './IncidentFilter.jsx';
@@ -40,7 +42,13 @@ const IncidentList = ({
     clearFilters,
     setCurrentPage,
     getQueryFilters,
+    selectedIncidentUuid,
+    hoverIncident,
+    mapRef,
   } = useMapStore();
+
+  const { flyTo } = useFlyToIncident();
+  const selectedCardRef = useRef(null);
 
   // Local state for filters (to avoid excessive store updates)
   const [localFilters, setLocalFilters] = useState(storeFilters);
@@ -67,6 +75,35 @@ const IncidentList = ({
   useEffect(() => {
     setCurrentPageLocal(queryFilters.page || 1);
   }, [queryFilters.page]);
+
+  // Étape 4 : Scroll automatique vers la carte sélectionnée
+  useEffect(() => {
+    if (selectedIncidentUuid && selectedCardRef.current) {
+      selectedCardRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [selectedIncidentUuid]);
+
+  // Étape 4 : Recadrage de la carte au chargement/changement de page
+  useEffect(() => {
+    if (incidentsData?.incidents?.length && mapRef) {
+      const coords = incidentsData.incidents
+        .map(i => [(i.latitude ?? i.lat), (i.longitude ?? i.lng)])
+        .filter(c => c[0] != null && c[1] != null);
+        
+      if (coords.length > 0) {
+        const bounds = L.latLngBounds(coords);
+        mapRef.fitBounds(bounds, {
+          padding: [50, 50],
+          maxZoom: 15,
+          animate: true,
+          duration: 0.8,
+        });
+      }
+    }
+  }, [incidentsData, mapRef]);
 
   /**
    * Handle filters change with debouncing
@@ -242,16 +279,27 @@ const IncidentList = ({
         ? 'space-y-3' 
         : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
       }>
-        {incidents.map((incident) => (
-          <IncidentCard
-            key={incident.id}
-            incident={incident}
-            compact={compact}
-            onViewDetails={handleIncidentSelect}
-            onEdit={onIncidentEdit}
-            onDelete={onIncidentDelete}
-          />
-        ))}
+        {incidents.map((incident) => {
+          const uuid = incident.uuid ?? incident.id;
+          const isSelected = selectedIncidentUuid === uuid;
+          return (
+            <IncidentCard
+              key={uuid}
+              incident={incident}
+              compact={compact}
+              isSelected={isSelected}
+              cardRef={isSelected ? selectedCardRef : null}
+              onClick={(inc) => {
+                flyTo(inc);
+                handleIncidentSelect(inc);
+              }}
+              onMouseEnter={(inc) => hoverIncident(inc.uuid ?? inc.id)}
+              onMouseLeave={() => hoverIncident(null)}
+              onEdit={onIncidentEdit}
+              onDelete={onIncidentDelete}
+            />
+          );
+        })}
       </div>
 
       {/* Loading overlay for refetch */}

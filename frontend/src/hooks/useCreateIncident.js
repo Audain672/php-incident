@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createIncident } from '../api/localIncidentApi.js';
 import { useInvalidateIncidents } from './useIncidents.js';
 import useMapStore from '../store/useMapStore.js';
+import { useState } from 'react';
 
 /**
  * Hook for creating incidents
@@ -199,7 +200,8 @@ export const useCreateIncidentOptimistic = (options = {}) => {
  */
 export const useIncidentForm = (options = {}) => {
   const createMutation = useCreateIncident(options);
-  const { setIsFormOpen } = useMapStore();
+  const { setIsFormOpen, setDraftLocation } = useMapStore();
+  const [isSuccess, setIsSuccess] = useState(false);
 
   /**
    * Handle incident form submission
@@ -214,7 +216,17 @@ export const useIncidentForm = (options = {}) => {
         imageFile,
       });
       
-      return { success: true, data: result };
+      // Animation de succès (Étape 7)
+      setIsSuccess(true);
+      
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          setIsSuccess(false);
+          setDraftLocation(null);
+          resolve({ success: true, data: result });
+        }, 1500);
+      });
+      
     } catch (error) {
       return { 
         success: false, 
@@ -234,8 +246,12 @@ export const useIncidentForm = (options = {}) => {
     handleSubmit,
     handleCancel,
     isCreating: createMutation.isPending,
+    isSuccess,
     error: createMutation.error,
-    reset: createMutation.reset,
+    reset: () => {
+      createMutation.reset();
+      setIsSuccess(false);
+    },
   };
 };
 

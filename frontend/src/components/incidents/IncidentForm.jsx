@@ -31,6 +31,7 @@ const IncidentForm = ({
   onSubmit,
   isLoading,
   error,
+  isSuccess,
   onCancel,
   showLocationPicker = false,
   defaultLocation = null,
@@ -256,6 +257,13 @@ const IncidentForm = ({
                   disabled={isLoading}
                 />
               </div>
+              
+              {/* Affichage des coordonnées saisies Étape 7 */}
+              {latitude && longitude && (
+                <p className="text-xs text-neutral-500 mt-2 font-mono flex items-center justify-center bg-white py-1 rounded border border-neutral-100">
+                  <span className="mr-1">📍</span> {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
+                </p>
+              )}
             </div>
           )}
 
@@ -279,19 +287,14 @@ const IncidentForm = ({
           <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-neutral-300 border-dashed rounded-lg hover:border-neutral-400 transition-colors duration-200">
             <div className="space-y-1 text-center">
               {previewUrl ? (
-                <div className="space-y-4">
-                  <img
-                    src={previewUrl}
-                    alt="Aperçu"
-                    className="mx-auto h-32 w-32 object-cover rounded-lg"
-                  />
+                <div className="relative inline-block mt-2">
+                  <img src={previewUrl} alt="Aperçu" className="w-20 h-20 object-cover rounded-lg shadow-sm" />
                   <button
                     type="button"
                     onClick={handleFileRemove}
-                    className="text-danger-600 hover:text-danger-500 text-sm font-medium"
-                  >
-                    Supprimer l'image
-                  </button>
+                    className="absolute -top-2 -right-2 bg-danger-600 hover:bg-danger-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md transition-colors"
+                    aria-label="Supprimer la photo"
+                  >✕</button>
                 </div>
               ) : (
                 <div>
@@ -380,11 +383,17 @@ const IncidentForm = ({
           
           <Button
             type="submit"
-            variant="primary"
-            isLoading={isLoading}
-            disabled={!isValid || !isDirty || isLoading}
+            variant={isSuccess ? "success" : "primary"}
+            isLoading={isLoading && !isSuccess}
+            disabled={!isValid || !isDirty || isLoading || isSuccess}
+            className={isSuccess ? "bg-green-500 hover:bg-green-600 text-white border-green-500" : ""}
           >
-            {isLoading ? 'Envoi en cours...' : 'Signaler l\'incident'}
+            {isSuccess ? (
+              <span className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                Signalisé !
+              </span>
+            ) : isLoading ? 'Envoi en cours...' : 'Signaler l\'incident'}
           </Button>
         </div>
       </form>

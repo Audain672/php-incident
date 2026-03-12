@@ -1,3 +1,25 @@
+// AUDIT ÉTAPE 1
+// ──────────────────────────────────────────────────────────────────
+// CE QUE FAIT CE FICHIER (état actuel) :
+//   - useIncidents : fetch paginé des incidents avec filtres du store Zustand
+//   - useIncident  : fetch d'un incident unique par ID
+//   - useRealTimeIncidents : rechargement automatique toutes les 30 s
+//   - useIncidentStats, useSearchIncidents, useNearbyIncidents,
+//     useUserIncidents : hooks spécialisés (non utilisés dans MapPage)
+//   - useInvalidateIncidents : invalidation manuelle du cache React Query
+//
+// CE QUI DOIT CHANGER AUX ÉTAPES SUIVANTES :
+//   - Exposer isLoading depuis useIncidents au store (setIsMapLoading)
+//     pour centraliser l'état de chargement visible sur la carte
+//   - Éventuellement : ajouter un hook useIncidentByUuid pour la
+//     sélection par UUID (aligné sur le nouveau champ selectedIncidentUuid)
+//
+// DÉPENDANCES :
+//   - localIncidentApi.js (couche HTTP Axios)
+//   - useMapStore (lecture des filtres via getQueryFilters)
+//   - @tanstack/react-query : useQuery, useQueryClient
+// ──────────────────────────────────────────────────────────────────
+
 /**
  * Incidents Hook
  * React Query hook for fetching incidents with caching and invalidation

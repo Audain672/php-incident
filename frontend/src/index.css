@@ -61,6 +61,74 @@
     line-height: 1.5;
   }
 
+  /* Transitions fluides pour Leaflet */
+  .leaflet-fade-anim .leaflet-popup {
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .leaflet-zoom-animated {
+    transition: transform 0.25s cubic-bezier(0, 0, 0.25, 1);
+  }
+
+  /* Curseur crosshair en mode saisie d'incident */
+  .leaflet-container.crosshair-mode {
+    cursor: crosshair !important;
+  }
+
+  /* Supprimer les styles de cluster par défaut */
+  .cluster-icon-custom {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .leaflet-container {
+    min-height: 200px;
+  }
+
+  /* User Location Marker Styles */
+  .user-location-marker {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .user-location-dot {
+    width: 14px;
+    height: 14px;
+    background-color: #3b82f6; /* primary-500 */
+    border: 2px solid white;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  }
+
+  .user-location-pulse {
+    width: 20px;
+    height: 20px;
+    background-color: rgba(59, 130, 246, 0.4);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    animation: user-pulse 2s infinite ease-out;
+  }
+
+  @keyframes user-pulse {
+    0% {
+      transform: translate(-50%, -50%) scale(0.5);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(2.5);
+      opacity: 0;
+    }
+  }
+
   /* Custom marker styles */
   .incident-marker {
     background: transparent;

@@ -1,0 +1,61 @@
+/* ================================================================
+   markers.css — Styles et animations des marqueurs d'incidents
+   AUDIT ÉTAPE 2 — NOUVEAU FICHIER
+   Importé dans MapContainer.jsx
+   ================================================================ */
+
+/* Animation de pulsation pour l'état 'active' ------------------- */
+@keyframes markerPulse {
+  0%   { box-shadow: 0 0 0 0   rgba(255, 255, 255, 0.7); }
+  70%  { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(255, 255, 255, 0); }
+}
+
+/* Supprime le fond et la bordure de Leaflet sur nos icônes ------- */
+.incident-marker {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+/* Transition fluide sur l'icône Leaflet native ------------------ */
+.leaflet-marker-icon {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* État survolé : légère élévation via filter -------------------- */
+.incident-marker--hovered .leaflet-marker-icon,
+.leaflet-marker-icon.incident-marker--hovered {
+  filter: brightness(1.1) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+}
+
+/* État actif : z-index élevé + légère surbrillance ------------- */
+.incident-marker--active {
+  z-index: 1000 !important;
+}
+
+.incident-marker--active .leaflet-marker-icon,
+.leaflet-marker-icon.incident-marker--active {
+  filter: brightness(1.05) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45));
+}
+
+/* Cluster de marqueurs (leaflet.markercluster) — styles de base - */
+.marker-cluster-small  { background-color: rgba(110, 204, 57,  0.6); }
+.marker-cluster-medium { background-color: rgba(240, 194, 12,  0.6); }
+.marker-cluster-large  { background-color: rgba(241, 128, 23,  0.6); }
+
+.marker-cluster-small  div { background-color: rgba(110, 204, 57,  0.8); }
+.marker-cluster-medium div { background-color: rgba(240, 194, 12,  0.8); }
+.marker-cluster-large  div { background-color: rgba(241, 128, 23,  0.8); }
+
+.marker-cluster {
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  transition: transform 0.2s ease;
+}
+
+.marker-cluster:hover {
+  transform: scale(1.1);
+}
