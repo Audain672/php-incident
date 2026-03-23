@@ -1,0 +1,7 @@
+vendor/
+storage/logs/*.log
+storage/uploads/*
+!storage/uploads/.gitkeep
+!storage/uploads/incidents/.gitkeep
+.env
+*.DS_Store
