@@ -75,6 +75,7 @@ class AuthService
         try {
             $this->mailer->send(
                 $user['email'],
+                $user['first_name'] . ' ' . $user['last_name'],
                 'Bienvenue sur Incident Reporter',
                 "Bonjour {$user['first_name']}, votre compte a été créé avec succès."
             );
@@ -172,6 +173,7 @@ class AuthService
         try {
             $this->mailer->send(
                 $email,
+                $user['first_name'] . ' ' . $user['last_name'],
                 'Réinitialisation de votre mot de passe',
                 "Pour réinitialiser votre mot de passe, cliquez sur ce lien : $resetLink \n\nCe lien expire dans 1 heure."
             );
