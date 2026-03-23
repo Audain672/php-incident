@@ -28,7 +28,7 @@ export const useDynamicAuth = () => {
     },
     onSuccess: (data) => {
       debugLog('Login success', data);
-      
+
       // Store auth data
       if (data.token) {
         authStorage.setToken(data.token);
@@ -56,12 +56,11 @@ export const useDynamicAuth = () => {
     mutationFn: async (userData) => {
       const authApi = await getAuthApi();
       debugLog('Register attempt', { email: userData.email, mode: isLocalMode() ? 'local' : 'api' });
-      console.log('Registering user:', userData);
       return authApi.register(userData);
     },
     onSuccess: (data) => {
       debugLog('Register success', data);
-      
+
       // Store auth data if registration returns them
       if (data.token) {
         authStorage.setToken(data.token);
@@ -89,7 +88,7 @@ export const useDynamicAuth = () => {
     mutationFn: async () => {
       const authApi = await getAuthApi();
       debugLog('Logout attempt', { mode: isLocalMode() ? 'local' : 'api' });
-      
+
       try {
         return await authApi.logout();
       } catch (error) {
@@ -203,10 +202,10 @@ export const useDynamicLoginForm = () => {
       const result = await login(formData);
       return { success: true, data: result };
     } catch (error) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error.message || 'Échec de la connexion',
-        isLocalMode 
+        isLocalMode
       };
     }
   };
@@ -235,10 +234,10 @@ export const useDynamicRegisterForm = () => {
       const result = await register(formData);
       return { success: true, data: result };
     } catch (error) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error.message || 'Échec de l\'inscription',
-        isLocalMode 
+        isLocalMode
       };
     }
   };
