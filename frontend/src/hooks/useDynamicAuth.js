@@ -56,6 +56,7 @@ export const useDynamicAuth = () => {
     mutationFn: async (userData) => {
       const authApi = await getAuthApi();
       debugLog('Register attempt', { email: userData.email, mode: isLocalMode() ? 'local' : 'api' });
+      console.log('Registering user:', userData);
       return authApi.register(userData);
     },
     onSuccess: (data) => {

@@ -12,7 +12,7 @@ const ENV_CONFIG = {
   MODE: import.meta.env?.VITE_API_MODE || 'local',
   
   // API base URL (used when MODE is 'api')
-  API_BASE_URL: import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8000/api',
+  API_BASE_URL: import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8080/api',
   
   // Enable/disable mock delays for localStorage mode
   MOCK_DELAY: import.meta.env?.VITE_MOCK_DELAY !== 'false',
@@ -35,7 +35,7 @@ export const getAuthApi = async () => {
     const { localAuthApi } = await import('../api/localAuthApi.js');
     return localAuthApi;
   } else {
-    const { authApi } = await import('../api/authApi.js');
+    const authApi = await import('../api/authApi.js');
     return authApi;
   }
 };
@@ -45,7 +45,7 @@ export const getIncidentApi = async () => {
     const { localIncidentApi } = await import('../api/localIncidentApi.js');
     return localIncidentApi;
   } else {
-    const { incidentApi } = await import('../api/incidentApi.js');
+    const incidentApi = await import('../api/incidentApi.js');
     return incidentApi;
   }
 };

@@ -49,7 +49,7 @@ export const useApiConfig = () => {
     isApiMode: isApiMode(),
     config: {
       mode: import.meta.env?.VITE_API_MODE || 'local',
-      baseUrl: import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8000/api',
+      baseUrl: import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8080/api',
       mockDelay: import.meta.env?.VITE_MOCK_DELAY !== 'false',
       debug: import.meta.env?.MODE === 'development',
     },

@@ -282,3 +282,8 @@ export const searchIncidents = async (query, params = {}) => {
   const apiCall = apiClient.get(`/incidents/search?${queryParams.toString()}`);
   return handleApiResponse(apiCall);
 };
+
+// Aliases for compatibility with useDynamicIncidents
+export const getIncidents = fetchIncidents;
+export const getIncidentById = fetchIncidentById;
+
